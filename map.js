@@ -60,6 +60,11 @@ fetch('resources/beamlines_data.json')
             coordinates=beam["position"]
             //beamlines.push(coordinates)
             var marker = L.marker(coordinates).addTo(map);
+            marker.bindPopup(`
+                <h1>${beam.name}</h1>
+                <p class="beam-description">${beam.description}<p>
+                <a href="${beam.url}" target="-blank">Learn more</a>
+                `).openPopup();
             // var circle = L.circle(coordinates, {
             //     color: 'red',
             //     fillColor: '#f03',

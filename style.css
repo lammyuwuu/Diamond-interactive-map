@@ -15,3 +15,9 @@ p {
     height: 720px; 
     width: 1440px;
 }
+
+.beam-description {
+    /*font-family: 'Helvetica', 'Arial', sans-serif;*/
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 12pt;
+}
