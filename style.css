@@ -10,3 +10,8 @@ p {
 .paragraphs {
     color: green;
 }
+
+#map { 
+    height: 720px; 
+    width: 1440px;
+}
