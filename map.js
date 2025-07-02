@@ -63,11 +63,26 @@ fetch('resources/beamlines_data.json')
         for (const beam of group["beamlines"]){
             coordinates=beam["position"]
             //beamlines.push(coordinates)
-            let marker = L.marker(coordinates).addTo(thesebeamlines);
+            var markericon = new L.Icon({
+                iconUrl: group["markerColour"],
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+            let marker = L.marker(coordinates, {icon: markericon}).addTo(thesebeamlines);
             marker.bindPopup(`
-                <h1>${beam.name}</h1>
-                <p class="beam-description">${beam.description}<p>
-                <a href="${beam.url}" target="-blank">Learn more</a>
+                <div style="background-image: url(${group["icon"]}); background-size: cover; background-repeat: no-repeat; background-position: center">
+                    <h1>${beam.name}</h1>
+                    <p class="beam-description">${beam.description}<p>
+                    <a href="${beam.url}" target="-blank">Learn more</a>
+                </div>
+                <style>
+                    .leaflet-popup-content-wrapper {
+                        background-color:rgb(222, 222, 222)
+                    }
+                </style>
                 `).openPopup();
             // let circle = L.circle(coordinates, {
             //     color: 'red',

@@ -12,8 +12,7 @@ p {
 }
 
 #map { 
-    height: 600px; 
-    width: 1440px;
+    height: 97.48vh; 
 }
 
 .beam-description {
@@ -21,3 +20,4 @@ p {
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 12pt;
 }
+
