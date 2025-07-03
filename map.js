@@ -142,7 +142,7 @@ function distance (co1, co2) {
 // calculating nearest beamline
 function findNearestBeamline (e) {
 
-    // L.DomEvent.stopPropagation(e)
+    L.DomEvent.stopPropagation(e)
     // L.DomEvent.stop(e)
     // L.Util.stop(e)
     // L.DomEvent.preventDefault(e)
@@ -168,7 +168,6 @@ function findNearestBeamline (e) {
     // overwrite the pop up of the nearest beamline using marker.setPopupContent
     nearestMarker.setPopupContent("I'm your nearest beamline!")
 
-
     nearestMarker.openPopup();
     setTimeout(() => {
         nearestMarker.closePopup();
@@ -186,10 +185,10 @@ function findNearestBeamline (e) {
 
 let nearestButton = L.control({position: "bottomleft"})
 
-nearestButton.onAdd = function (e) {
+nearestButton.onAdd = function () {
     let button = L.DomUtil.create("div")
     button.innerHTML = "<button>Find nearest beamline</button>"
-    button.firstChild.addEventListener("click", () => findNearestBeamline(e))
+    button.firstChild.addEventListener("click", () => findNearestBeamline(event))
     
     return button;
 }
