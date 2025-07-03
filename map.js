@@ -1,20 +1,3 @@
-// let let1 = "hello"
-// const let2 = "bye"
-// let name = "Jason"
-// let list=[1,2,3]
-
-// function helloWorld(name) {
-    
-//     {let word = "diamond"}
-//     alert(word)
-// }
-
-// function test() {
-//     for(let val in list) {
-//         console.log(i)
-//     }
-//     console.log(i)
-// }
 
 // initialize the map on the "map" div with a given center and zoom
 let map = L.map('map', {
@@ -98,9 +81,46 @@ fetch('resources/beamlines_data.json')
         console.log(overlayMaps)
     }
     L.control.layers(overlayMaps).addTo(map);
-    // layerControl.addOverlay(overlayMaps[group["name"]], group["name"]);
-
     
 })
+
+// locate the user
+map.locate();
+
+// make user icon
+var userIcon = new L.Icon({
+    iconUrl: 'https://static.thenounproject.com/png/611348-200.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [40, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+})
+
+// let userIcon = L.layerGroup(); // this is prob where it goes wrong :3 
+// let overlayIcons={};
+
+// overlayIcons[icons]=userIcons
+// L.control.layers(overlayIcons).addTo(map);
+
+// error handling
+
+// if location is found, show accuracy
+function onLocationFound(e) {
+    var radius = e.accuracy;
+
+    L.marker(e.latlng, {icon: userIcon}).addTo(map)
+        .bindPopup("You are within " + radius + " meters from this point").openPopup();
+
+    L.circle(e.latlng, radius).addTo(map);
+}
+
+map.on('locationfound', onLocationFound);
+
+// if location not found, output error message
+function onLocationError(e) {
+    alert(e.message);
+}
+
+map.on('locationerror', onLocationError);
 
 
