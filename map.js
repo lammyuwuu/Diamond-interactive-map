@@ -52,7 +52,8 @@ fetch('resources/beamlines_data.json')
                 iconSize: [25, 41],
                 iconAnchor: [12, 41],
                 popupAnchor: [1, -34],
-                shadowSize: [41, 41]
+                shadowSize: [41, 41],
+                zIndex: 1
             });
             let marker = L.marker(coordinates, {icon: markericon}).addTo(thesebeamlines);
             marker.bindPopup(`
@@ -85,7 +86,9 @@ fetch('resources/beamlines_data.json')
 })
 
 // locate the user
-map.locate();
+map.locate({watch: true});
+
+// could use map.stopLocate() later to stop locating continuously
 
 // make user icon
 var userIcon = new L.Icon({
@@ -93,7 +96,8 @@ var userIcon = new L.Icon({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [40, 41],
     popupAnchor: [1, -34],
-    shadowSize: [41, 41]
+    shadowSize: [41, 41],
+    iconAnchor: [20, 30]
 })
 
 // let userIcon = L.layerGroup(); // this is prob where it goes wrong :3 
@@ -102,19 +106,30 @@ var userIcon = new L.Icon({
 // overlayIcons[icons]=userIcons
 // L.control.layers(overlayIcons).addTo(map);
 
-// error handling
+
+// create markers first
+
+let lat=[0,0]
+let radius=0
+
+let userMarker = L.marker(lat, {icon: userIcon}).addTo(map).setZIndexOffset(1000)
+let userCircle = L.circle(lat, radius).addTo(map);
 
 // if location is found, show accuracy
 function onLocationFound(e) {
     var radius = e.accuracy;
+    radius.toPrecision(2); //round to 2sf
 
-    L.marker(e.latlng, {icon: userIcon}).addTo(map)
-        .bindPopup("You are within " + radius + " meters from this point").openPopup();
+    let lat = e.latlng;
+    userMarker.setLatLng(lat);
 
-    L.circle(e.latlng, radius).addTo(map);
+    userMarker.bindPopup("You are within " + radius + " meters from this point").openPopup();
+
+    userCircle.setLatLng(lat);
+    userCircle.setRadius(radius)
 }
 
-map.on('locationfound', onLocationFound);
+map.on('locationfound', onLocationFound)
 
 // if location not found, output error message
 function onLocationError(e) {
