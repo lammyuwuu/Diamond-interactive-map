@@ -33,19 +33,23 @@ L.imageOverlay(baseUnder, imageBounds, {opacity:1, zIndex:2}).addTo(map);
 // fetching beamlines coordinates from Diamond provided json file
 // then add marker for each beamline
 
+let beamCoordinates={}
+
 fetch('resources/beamlines_data.json')
 .then((response) => response.json())
 .then((bGroups) => {
-    console.log(bGroups)
     
-    let beamlines=[]
     let overlayMaps = {}
     for (const group of bGroups) {
-        //let thisgroup = []
         let thesebeamlines = L.layerGroup()
         for (const beam of group["beamlines"]){
-            coordinates=beam["position"]
-            //beamlines.push(coordinates)
+
+            // create object for later use - to find nearest beamline
+            let coordinates=beam["position"]
+            let beamlineName = beam["name"]
+            beamCoordinates[beamlineName] = coordinates
+            console.log(beamCoordinates)
+
             var markericon = new L.Icon({
                 iconUrl: group["markerColour"],
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -79,7 +83,7 @@ fetch('resources/beamlines_data.json')
         thesebeamlines.addTo(map)
         overlayMaps[group["name"]]=thesebeamlines
         map["layers"] = group
-        console.log(overlayMaps)
+        //console.log(overlayMaps)
     }
     L.control.layers(overlayMaps).addTo(map);
     
@@ -137,5 +141,34 @@ function onLocationError(e) {
 }
 
 map.on('locationerror', onLocationError);
+
+
+
+// -- create button for finding the nearest beamline -- //
+
+// calculating nearest beamline
+findNearestBeamline = function (lat, beamCoordinates) {
+    let minDistance = Number.MAX_VALUE
+    let nearestBeamline = ""
+    for ([beamlineName, coordinates] in Object.entries(beamCoordinates)) {
+            currentDistance = distance(lat, coordinates)
+            if (currentDistance <= minDistance) {
+                minDistance = currentDistance
+                nearestBeamline = beamlineName
+            }
+    }
+    return (minDistance, nearestBeamline)
+}
+
+let nearestButton = L.control({position: "bottomleft"})
+
+nearestButton.onAdd = function () {
+    let button = L.DomUtil.create("div")
+    button.innerHTML = "<button>Nearest beamline to you</button>"
+    button.firstChild.addEventListener("click", findNearestBeamline)
+    return button;
+}
+
+nearestButton.addTo(map)
 
 
