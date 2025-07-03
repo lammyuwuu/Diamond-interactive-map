@@ -54,7 +54,6 @@ fetch('resources/beamlines_data.json')
                     }
                 </style>
                 `)//.openPopup();
-            marker.openPopup();
             
             // create object for later use - to find nearest beamline
             let beamlineName = beam["name"]
@@ -130,12 +129,6 @@ function distance (co1, co2) {
     return d
 }
 
-// function distance([x1, y1], [x2, y2]) {
-//     const dx = x2 - x1;
-//     const dy = y2 - y1;
-//     let d = Math.sqrt(dx * dx + dy * dy)
-//     return d;
-// }
 
 // -- create button for finding the nearest beamline -- //
 
@@ -143,9 +136,6 @@ function distance (co1, co2) {
 function findNearestBeamline (e) {
 
     L.DomEvent.stopPropagation(e)
-    // L.DomEvent.stop(e)
-    // L.Util.stop(e)
-    // L.DomEvent.preventDefault(e)
 
     let minDistance = Number.MAX_VALUE
     let nearestBeamline = ""
@@ -157,7 +147,6 @@ function findNearestBeamline (e) {
         if (currentDistance <= minDistance) {
             minDistance = currentDistance
             nearestBeamline = beamlineName
-            //nearestMarker = marker
         }
     }
 
@@ -169,17 +158,12 @@ function findNearestBeamline (e) {
     nearestMarker.setPopupContent("I'm your nearest beamline!")
 
     nearestMarker.openPopup();
+
+    // use setTimeout to return the content to original
     setTimeout(() => {
         nearestMarker.closePopup();
         nearestMarker.setPopupContent(originalPopup);
     }, 5000)
-
-    // nearestMarker.setPopupContent("I'm your nearest beamline!").addTo(map);
-    // nearestMarker.setPopupContent("I'm your nearest beamline!").openOn(map);    
-    
-    // use setTimeout to return the content to original
-
-
 }
 
 
