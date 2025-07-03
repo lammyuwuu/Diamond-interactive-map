@@ -10,6 +10,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
 }).addTo(map);
 
+// adding images of diamond onto map
 let baseOver = 'img/BaseOver.png'
 let baseUnder = 'img/BaseUnder.png'
 let imageBounds = [[51.57168183170403, -1.3173294067382815], [51.57701619673675, -1.304454803466797]];
@@ -17,71 +18,54 @@ L.imageOverlay(baseOver, imageBounds, {opacity:1, zIndex:3}).addTo(map);
 L.imageOverlay(baseUnder, imageBounds, {opacity:1, zIndex:2}).addTo(map);
 
 
-
-// // Adding marker/ circle into map
-
-// let marker = L.marker([51.574349, -1.310892]).addTo(map);
-
-// let circle = L.circle([51.574349, -1.310892], {
-//     color: 'red',
-//     fillColor: '#f03',
-//     fillOpacity: 0.5,
-//     radius: 50
-// }).addTo(map);
-
-
 // fetching beamlines coordinates from Diamond provided json file
 // then add marker for each beamline
+
+let beamCoordinates={}
 
 fetch('resources/beamlines_data.json')
 .then((response) => response.json())
 .then((bGroups) => {
-    console.log(bGroups)
     
-    let beamlines=[]
     let overlayMaps = {}
     for (const group of bGroups) {
-        //let thisgroup = []
         let thesebeamlines = L.layerGroup()
         for (const beam of group["beamlines"]){
-            coordinates=beam["position"]
-            //beamlines.push(coordinates)
-            var markericon = new L.Icon({
+
+            let markericon = new L.Icon({
                 iconUrl: group["markerColour"],
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
                 iconSize: [25, 41],
                 iconAnchor: [12, 41],
                 popupAnchor: [1, -34],
                 shadowSize: [41, 41],
-                zIndex: 1
+                zIndex: 10
             });
-            let marker = L.marker(coordinates, {icon: markericon}).addTo(thesebeamlines);
+            let marker = L.marker(beam["position"], {icon: markericon}).addTo(thesebeamlines);
             marker.bindPopup(`
                 <div style="background-image: url(${group["icon"]}); background-size: cover; background-repeat: no-repeat; background-position: center">
                     <h1>${beam.name}</h1>
-                    <p class="beam-description">${beam.description}<p>
+                    <p class="beam-description">${beam.description}</p>
                     <a href="${beam.url}" target="-blank">Learn more</a>
                 </div>
                 <style>
                     .leaflet-popup-content-wrapper {
-                        background-color:rgb(222, 222, 222)
+                        background-color: #ffffb3;
                     }
                 </style>
-                `).openPopup();
-            // let circle = L.circle(coordinates, {
-            //     color: 'red',
-            //     fillColor: '#f03',
-            //     fillOpacity: 0.5,
-            //     radius: 25
-            // }).addTo(map);
+                `)//.openPopup();
+            
+            // create object for later use - to find nearest beamline
+            let beamlineName = beam["name"]
+            beamCoordinates[beamlineName] = marker
             
         }
+
         thesebeamlines.addTo(map)
         overlayMaps[group["name"]]=thesebeamlines
         map["layers"] = group
-        console.log(overlayMaps)
     }
-    L.control.layers(overlayMaps).addTo(map);
+    var layerControl = L.control.layers(overlayMaps).addTo(map);
     
 })
 
@@ -91,7 +75,7 @@ map.locate({watch: true});
 // could use map.stopLocate() later to stop locating continuously
 
 // make user icon
-var userIcon = new L.Icon({
+let userIcon = new L.Icon({
     iconUrl: 'https://static.thenounproject.com/png/611348-200.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
     iconSize: [40, 41],
@@ -109,23 +93,24 @@ var userIcon = new L.Icon({
 
 // create markers first
 
-let lat=[0,0]
+let userpos = [0,0]
 let radius=0
 
-let userMarker = L.marker(lat, {icon: userIcon}).addTo(map).setZIndexOffset(1000)
-let userCircle = L.circle(lat, radius).addTo(map);
+let userMarker = L.marker(userpos, {icon: userIcon}).addTo(map).setZIndexOffset(1000)
+let userCircle = L.circle(userpos, radius).addTo(map);
 
 // if location is found, show accuracy
 function onLocationFound(e) {
     var radius = e.accuracy;
-    radius.toPrecision(2); //round to 2sf
 
-    let lat = e.latlng;
-    userMarker.setLatLng(lat);
+    userpos = e.latlng;
+    userpos = [userpos.lat, userpos.lng] // for later - calculating distance
 
-    userMarker.bindPopup("You are within " + radius + " meters from this point").openPopup();
+    userMarker.setLatLng(userpos);
 
-    userCircle.setLatLng(lat);
+    userMarker.bindPopup("You are within " + radius.toPrecision(2) + " meters from this point").openPopup();
+
+    userCircle.setLatLng(userpos);
     userCircle.setRadius(radius)
 }
 
@@ -139,3 +124,78 @@ function onLocationError(e) {
 map.on('locationerror', onLocationError);
 
 
+function distance (co1, co2) {
+    let d = Math.sqrt(((co1[0]-co2[0])**2)+((co1[1]-co2[1])**2))
+    return d
+}
+
+
+// -- create button for finding the nearest beamline -- //
+
+// calculating nearest beamline
+function findNearestBeamline (e) {
+
+    L.DomEvent.stopPropagation(e)
+
+    let minDistance = Number.MAX_VALUE
+    let nearestBeamline = ""
+    let nearestMarker
+
+    for ([beamlineName, marker] of Object.entries(beamCoordinates)) {
+        let beampos = marker.getLatLng()
+        let currentDistance = distance(userpos, [beampos.lat, beampos.lng])
+        if (currentDistance <= minDistance) {
+            minDistance = currentDistance
+            nearestBeamline = beamlineName
+        }
+    }
+
+    nearestMarker = beamCoordinates[nearestBeamline]
+    
+    var originalPopup = nearestMarker.getPopup().getContent()
+
+    // overwrite the pop up of the nearest beamline using marker.setPopupContent
+    nearestMarker.setPopupContent("I'm your nearest beamline!")
+
+    nearestMarker.openPopup();
+
+    // use setTimeout to return the content to original
+    setTimeout(() => {
+        nearestMarker.closePopup();
+        nearestMarker.setPopupContent(originalPopup);
+    }, 5000)
+}
+
+
+let nearestButton = L.control({position: "bottomleft"})
+
+nearestButton.onAdd = function () {
+    let button = L.DomUtil.create("div")
+    button.innerHTML = "<button>Find nearest beamline</button>"
+    button.firstChild.addEventListener("click", () => findNearestBeamline(event))
+    
+    return button;
+}
+
+nearestButton.addTo(map)
+
+
+
+
+// -- button for zooming -- //
+
+function zoom () {
+    map.setView([51.574349, -1.310892], 17.4)
+}
+
+let zoomButton = L.control({position: "bottomleft"})
+
+zoomButton.onAdd = function () {
+    let button = L.DomUtil.create("div")
+    button.innerHTML = "<button>Zoom</button>"
+    button.firstChild.addEventListener("click", () => zoom(event))
+    
+    return button;
+}
+
+zoomButton.addTo(map)
