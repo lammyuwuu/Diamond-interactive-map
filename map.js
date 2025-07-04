@@ -185,10 +185,7 @@ nearestButton.addTo(map)
 // -- button for zooming -- //
 
 function zoom () {
-    map = L.map('map', {
-        center: [51.574349, -1.310892],
-        zoom: 17.4
-    });
+    map.setView([51.574349, -1.310892], 17.4)
 }
 
 let zoomButton = L.control({position: "topleft"})
