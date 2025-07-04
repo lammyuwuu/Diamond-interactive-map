@@ -65,7 +65,7 @@ fetch('resources/beamlines_data.json')
         overlayMaps[group["name"]]=thesebeamlines
         map["layers"] = group
     }
-    var layerControl = L.control.layers(overlayMaps).addTo(map);
+    var layerControl = L.control.layers(null, overlayMaps).addTo(map);
     
 })
 
@@ -155,7 +155,7 @@ function findNearestBeamline (e) {
     var originalPopup = nearestMarker.getPopup().getContent()
 
     // overwrite the pop up of the nearest beamline using marker.setPopupContent
-    nearestMarker.setPopupContent("I'm your nearest beamline!")
+    nearestMarker.setPopupContent(`I'm ${nearestBeamline}, your nearest beamline!`)
 
     nearestMarker.openPopup();
 
@@ -167,7 +167,7 @@ function findNearestBeamline (e) {
 }
 
 
-let nearestButton = L.control({position: "bottomleft"})
+let nearestButton = L.control({position: "topleft"})
 
 nearestButton.onAdd = function () {
     let button = L.DomUtil.create("div")
@@ -185,17 +185,40 @@ nearestButton.addTo(map)
 // -- button for zooming -- //
 
 function zoom () {
-    map.setView([51.574349, -1.310892], 17.4)
+    map = L.map('map', {
+        center: [51.574349, -1.310892],
+        zoom: 17.4
+    });
 }
 
-let zoomButton = L.control({position: "bottomleft"})
+let zoomButton = L.control({position: "topleft"})
 
 zoomButton.onAdd = function () {
     let button = L.DomUtil.create("div")
-    button.innerHTML = "<button>Zoom</button>"
+    button.innerHTML = "<button>Reset map</button>"
     button.firstChild.addEventListener("click", () => zoom(event))
     
     return button;
 }
 
 zoomButton.addTo(map)
+
+
+
+// -- button for zooming to user location-- //
+
+function userZoom () {
+    map.setView(userpos, 17.4)
+}
+
+let userButton = L.control({position: "topleft"})
+
+userButton.onAdd = function () {
+    let button = L.DomUtil.create("div")
+    button.innerHTML = "<button>Focus</button>"
+    button.firstChild.addEventListener("click", () => userZoom(event))
+    
+    return button;
+}
+
+userButton.addTo(map)
